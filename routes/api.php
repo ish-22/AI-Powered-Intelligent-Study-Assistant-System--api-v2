@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile',             [ProfileController::class, 'show']);
     Route::patch('/profile',           [ProfileController::class, 'update']);
     Route::post('/profile/password',   [ProfileController::class, 'changePassword']);
+
+    Route::get('/dashboard/stats',     [DashboardController::class, 'stats']);
+    Route::patch('/dashboard/stats',   [DashboardController::class, 'updateStats']);
 });
