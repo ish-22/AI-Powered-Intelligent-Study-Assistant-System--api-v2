@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
@@ -32,6 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/documents',         [DocumentController::class, 'index']);
     Route::post('/documents',        [DocumentController::class, 'store']);
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
+
+    // Chat
+    Route::get('/chats',                        [ChatController::class, 'index']);
+    Route::post('/chats',                       [ChatController::class, 'store']);
+    Route::get('/chats/{id}/messages',          [ChatController::class, 'messages']);
+    Route::post('/chats/{id}/message',          [ChatController::class, 'sendMessage']);
+    Route::delete('/chats/{id}',                [ChatController::class, 'destroy']);
 
     // Admin routes (require admin role)
     Route::prefix('admin')->middleware('admin')->group(function () {
