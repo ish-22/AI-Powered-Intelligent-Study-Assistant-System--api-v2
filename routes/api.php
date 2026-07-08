@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -22,4 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard/stats',     [DashboardController::class, 'stats']);
     Route::patch('/dashboard/stats',   [DashboardController::class, 'updateStats']);
+
+    // Admin routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/users', [AdminController::class, 'listUsers']);
+    });
 });
