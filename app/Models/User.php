@@ -32,7 +32,18 @@ class User extends Authenticatable
         'profile_picture',
         'google_id',
         'last_login_date',
+        'role',
     ];
+
+    public function documents()
+    {
+        return $this->hasMany(\App\Models\Document::class);
+    }
+
+    public function dashboardStatistic()
+    {
+        return $this->hasOne(\App\Models\DashboardStatistic::class);
+    }
 
     protected $hidden = [
         'password',
