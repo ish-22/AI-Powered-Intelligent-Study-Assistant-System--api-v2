@@ -30,9 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/dashboard/stats', [DashboardController::class, 'updateStats']);
 
     // Documents
-    Route::get('/documents',         [DocumentController::class, 'index']);
-    Route::post('/documents',        [DocumentController::class, 'store']);
-    Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
+    Route::get('/documents',                  [DocumentController::class, 'index']);
+    Route::post('/documents',                 [DocumentController::class, 'store']);
+    Route::delete('/documents/{id}',          [DocumentController::class, 'destroy']);
+    Route::post('/documents/{id}/summary',    [DocumentController::class, 'generateSummary']);
+    Route::post('/documents/{id}/quiz',       [DocumentController::class, 'generateQuiz']);
+    Route::delete('/documents/{id}/summary',  [DocumentController::class, 'clearSummary']);
 
     // Chat
     Route::get('/chats',                        [ChatController::class, 'index']);

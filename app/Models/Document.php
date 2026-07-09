@@ -30,6 +30,12 @@ class Document extends Model
         'file_size',
         'subject',
         'status',
+        'summary',
+        'quiz_data',
+    ];
+
+    protected $casts = [
+        'quiz_data' => 'array',
     ];
 
     public function user(): BelongsTo
