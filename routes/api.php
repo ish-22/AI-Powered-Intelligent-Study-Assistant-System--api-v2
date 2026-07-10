@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\RecommendationsController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -36,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/documents/{id}/summary',    [DocumentController::class, 'generateSummary']);
     Route::post('/documents/{id}/quiz',       [DocumentController::class, 'generateQuiz']);
     Route::delete('/documents/{id}/summary',  [DocumentController::class, 'clearSummary']);
+
+    // Recommendations
+    Route::post('/recommendations/generate', [RecommendationsController::class, 'generate']);
 
     // Chat
     Route::get('/chats',                        [ChatController::class, 'index']);
