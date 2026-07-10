@@ -112,9 +112,12 @@ class DocumentController extends Controller
         // Validate & default the count (1–100)
         $count = (int) $request->input('count', 10);
         $count = max(1, min(100, $count));
+        
+        $difficulty = $request->input('difficulty', 'medium');
+        $topic = $request->input('topic', '');
 
-        // Return cached quiz only if the count matches
-        if (!empty($doc->quiz_data) && count($doc->quiz_data) === $count) {
+        // Return cached quiz only if the count matches AND no custom topic/difficulty
+        if (empty($topic) && $difficulty === 'medium' && !empty($doc->quiz_data) && count($doc->quiz_data) === $count) {
             return response()->json(['quiz' => $doc->quiz_data]);
         }
 
@@ -129,10 +132,13 @@ class DocumentController extends Controller
         // Scale max_tokens: ~150 tokens per question + overhead
         $maxTokens = min(4000, 300 + ($count * 150));
 
+        $difficultyPrompt = "The questions should be at a {$difficulty} difficulty level.";
+        $topicPrompt = $topic ? "Focus heavily on the specific topic: '{$topic}'." : "";
+
         $rawJson = $this->callAI([
             [
                 'role'    => 'system',
-                'content' => "You are an expert quiz generator. Generate exactly {$count} multiple-choice questions from the given document. Respond ONLY with a valid JSON array in this exact format, no other text: [{\"question\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"answer\": \"A) ...\"}]",
+                'content' => "You are an expert quiz generator. Generate exactly {$count} multiple-choice questions from the given document. {$difficultyPrompt} {$topicPrompt} Respond ONLY with a valid JSON array in this exact format, no other text: [{\"question\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"answer\": \"A) ...\", \"explanation\": \"...\"}]",
             ],
             [
                 'role'    => 'user',
