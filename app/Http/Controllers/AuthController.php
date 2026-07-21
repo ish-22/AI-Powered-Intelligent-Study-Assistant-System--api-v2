@@ -76,6 +76,9 @@ class AuthController extends Controller
             'full_name'       => $user->full_name,
             'email'           => $user->email,
             'profile_picture' => $user->profile_picture,
+            'about_me'        => $user->about_me,
+            'primary_course'  => $user->primary_course,
+            'language'        => $user->language,
             'created_at'      => $user->created_at,
             'last_login_date' => $user->last_login_date,
         ];

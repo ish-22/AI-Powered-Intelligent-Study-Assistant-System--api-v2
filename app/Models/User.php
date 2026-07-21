@@ -33,6 +33,9 @@ class User extends Authenticatable
         'google_id',
         'last_login_date',
         'role',
+        'about_me',
+        'primary_course',
+        'language',
     ];
 
     public function documents()
