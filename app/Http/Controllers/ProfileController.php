@@ -20,6 +20,7 @@ class ProfileController extends Controller
                 'about_me'        => $user->about_me,
                 'primary_course'  => $user->primary_course,
                 'language'        => $user->language,
+                'preferences'     => $user->preferences ?: [],
                 'created_at'      => $user->created_at,
                 'last_login_date' => $user->last_login_date,
             ],
@@ -37,6 +38,7 @@ class ProfileController extends Controller
             'about_me'        => 'sometimes|nullable|string',
             'primary_course'  => 'sometimes|nullable|string|max:255',
             'language'        => 'sometimes|nullable|string|max:255',
+            'preferences'     => 'sometimes|array',
         ]);
 
         if (!empty($data['profile_picture']) && preg_match('/^data:image\/(\w+);base64,/', $data['profile_picture'], $type)) {
@@ -61,6 +63,7 @@ class ProfileController extends Controller
                 'about_me'        => $user->about_me,
                 'primary_course'  => $user->primary_course,
                 'language'        => $user->language,
+                'preferences'     => $user->preferences ?: [],
             ],
         ]);
     }
