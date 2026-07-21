@@ -79,6 +79,7 @@ class AuthController extends Controller
             'about_me'        => $user->about_me,
             'primary_course'  => $user->primary_course,
             'language'        => $user->language,
+            'preferences'     => $user->preferences ?: [],
             'created_at'      => $user->created_at,
             'last_login_date' => $user->last_login_date,
         ];

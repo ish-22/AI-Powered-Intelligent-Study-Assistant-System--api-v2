@@ -36,6 +36,7 @@ class User extends Authenticatable
         'about_me',
         'primary_course',
         'language',
+        'preferences',
     ];
 
     public function documents()
@@ -59,6 +60,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_date'   => 'datetime',
             'password'          => 'hashed',
+            'preferences'       => 'array',
         ];
     }
 }
