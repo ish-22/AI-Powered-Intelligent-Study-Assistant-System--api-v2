@@ -39,4 +39,10 @@ return [
         'key' => env('OPENROUTER_API_KEY'),
     ],
 
+    'ai' => [
+        'gateway_url' => env('AI_GATEWAY_URL', 'https://openrouter.ai/api/v1'),
+        'key'         => env('AI_GATEWAY_KEY', env('OPENROUTER_API_KEY')),
+        'model'       => env('AI_MODEL', 'openai/gpt-3.5-turbo'),
+    ],
+
 ];

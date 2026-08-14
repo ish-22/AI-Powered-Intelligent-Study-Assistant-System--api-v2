@@ -157,10 +157,12 @@ class ChatController extends Controller
 
     private function callAI(array $history): string
     {
-        $apiKey = config('services.openrouter.key');
+        $baseUrl = rtrim(config('services.ai.gateway_url'), '/');
+        $apiKey  = config('services.ai.key');
+        $model   = config('services.ai.model');
 
         if (!$apiKey) {
-            return "AI is not configured. Please add OPENROUTER_API_KEY to the backend .env file.";
+            return "AI is not configured. Please add AI_GATEWAY_KEY to the backend .env file.";
         }
 
         // Only prepend the generic system prompt if history has no system message already
@@ -174,8 +176,8 @@ class ChatController extends Controller
             'Authorization' => "Bearer {$apiKey}",
             'HTTP-Referer'  => config('app.url'),
             'X-Title'       => 'Study Assistant',
-        ])->timeout(30)->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model'      => 'openai/gpt-3.5-turbo',
+        ])->timeout(30)->post("{$baseUrl}/chat/completions", [
+            'model'      => $model,
             'messages'   => $messages,
             'max_tokens' => 1024,
         ]);

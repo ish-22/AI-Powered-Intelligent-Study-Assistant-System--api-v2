@@ -69,12 +69,56 @@ class AuthController extends Controller
         return response()->json(['user' => $this->formatUser($request->user())]);
     }
 
+    public function googleLogin(Request $request)
+    {
+        $data = $request->validate([
+            'email'           => 'required|email',
+            'full_name'       => 'required|string',
+            'google_id'       => 'required|string',
+            'profile_picture' => 'nullable|string',
+        ]);
+
+        // Find user by google_id or email
+        $user = User::where('google_id', $data['google_id'])
+            ->orWhere('email', $data['email'])
+            ->first();
+
+        if ($user) {
+            $updateData = [];
+            if (empty($user->google_id)) {
+                $updateData['google_id'] = $data['google_id'];
+            }
+            if (empty($user->profile_picture) && !empty($data['profile_picture'])) {
+                $updateData['profile_picture'] = $data['profile_picture'];
+            }
+            if (!empty($updateData)) {
+                $user->update($updateData);
+            }
+        } else {
+            $user = User::create([
+                'email'           => $data['email'],
+                'full_name'       => $data['full_name'],
+                'google_id'       => $data['google_id'],
+                'profile_picture' => $data['profile_picture'] ?? null,
+            ]);
+        }
+
+        $user->update(['last_login_date' => now()]);
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'user'  => $this->formatUser($user),
+            'token' => $token,
+        ]);
+    }
+
     private function formatUser(User $user): array
     {
         return [
             'id'              => $user->id,
             'full_name'       => $user->full_name,
             'email'           => $user->email,
+            'role'            => $user->role ?? 'student',
             'profile_picture' => $user->profile_picture,
             'about_me'        => $user->about_me,
             'primary_course'  => $user->primary_course,
