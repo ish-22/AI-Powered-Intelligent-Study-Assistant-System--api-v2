@@ -195,15 +195,18 @@ class RecommendationsController extends Controller
 
     private function callAI(array $messages, int $maxTokens = 1200): string
     {
-        $apiKey = config('services.openrouter.key');
-        if (!$apiKey) return 'AI is not configured.';
+        $baseUrl = rtrim(config('services.ai.gateway_url'), '/');
+        $apiKey  = config('services.ai.key');
+        $model   = config('services.ai.model');
+
+        if (!$apiKey) return 'AI is not configured. Please add AI_GATEWAY_KEY to the backend .env file.';
 
         $response = Http::withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'HTTP-Referer'  => config('app.url'),
             'X-Title'       => 'Study Assistant',
-        ])->timeout(60)->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model'      => 'openai/gpt-3.5-turbo',
+        ])->timeout(60)->post("{$baseUrl}/chat/completions", [
+            'model'      => $model,
             'messages'   => $messages,
             'max_tokens' => $maxTokens,
         ]);

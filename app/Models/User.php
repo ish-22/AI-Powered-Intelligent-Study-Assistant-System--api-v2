@@ -49,6 +49,21 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\DashboardStatistic::class);
     }
 
+    public function quizzes()
+    {
+        return $this->hasMany(\App\Models\Quiz::class);
+    }
+
+    public function quizAttempts()
+    {
+        return $this->hasMany(\App\Models\QuizAttempt::class);
+    }
+
+    public function flashcards()
+    {
+        return $this->hasMany(\App\Models\Flashcard::class);
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

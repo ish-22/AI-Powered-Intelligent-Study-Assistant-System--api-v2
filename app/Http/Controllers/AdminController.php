@@ -19,9 +19,11 @@ class AdminController extends Controller
         ]);
 
         // Find admin user by username stored in full_name or a dedicated admin account
-        $user = User::where('email', $data['username'])
-            ->orWhere('full_name', $data['username'])
-            ->where('role', 'admin')
+        $user = User::where('role', 'admin')
+            ->where(function ($query) use ($data) {
+                $query->where('email', $data['username'])
+                      ->orWhere('full_name', $data['username']);
+            })
             ->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
