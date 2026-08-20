@@ -25,9 +25,23 @@ class Quiz extends Model
     protected $fillable = [
         'user_id',
         'document_id',
+        'material_ids',
         'title',
+        'description',
         'difficulty',
         'time_limit_mins',
+        'status',
+        'start_at',
+        'deadline_at',
+        'total_marks',
+        'show_results_immediately',
+    ];
+
+    protected $casts = [
+        'material_ids' => 'array',
+        'start_at' => 'datetime',
+        'deadline_at' => 'datetime',
+        'show_results_immediately' => 'boolean',
     ];
 
     public function user(): BelongsTo

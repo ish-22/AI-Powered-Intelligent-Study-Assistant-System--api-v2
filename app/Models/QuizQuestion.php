@@ -28,6 +28,7 @@ class QuizQuestion extends Model
         'options',
         'correct_answer',
         'explanation',
+        'marks',
     ];
 
     protected $casts = [

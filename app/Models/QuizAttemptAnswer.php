@@ -27,11 +27,14 @@ class QuizAttemptAnswer extends Model
         'student_answer',
         'is_correct',
         'ai_feedback',
+        'teacher_feedback',
+        'is_manually_graded',
         'score_awarded',
     ];
 
     protected $casts = [
         'is_correct' => 'boolean',
+        'is_manually_graded' => 'boolean',
     ];
 
     public function attempt(): BelongsTo

@@ -7,13 +7,15 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\RecommendationsController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeacherController;
 
 // Public auth routes
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login',    [AuthController::class, 'login']);
-    Route::post('/google',   [AuthController::class, 'googleLogin']);
+    Route::post('/register',   [AuthController::class, 'register']);
+    Route::post('/login',      [AuthController::class, 'login']);
+    Route::post('/google',     [AuthController::class, 'googleLogin']);
+    Route::post('/send-otp',   [AuthController::class, 'sendOtp']);
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 });
 
 // Admin login (separate — uses username+password, not email)
@@ -49,10 +51,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chats/{id}/message',          [ChatController::class, 'sendMessage']);
     Route::delete('/chats/{id}',                [ChatController::class, 'destroy']);
 
+    // Quiz routes
+    Route::get('/quizzes',                           [App\Http\Controllers\QuizController::class, 'index']);
+    Route::post('/quizzes/generate',                 [App\Http\Controllers\QuizController::class, 'generate']);
+    Route::put('/quizzes/{id}',                      [App\Http\Controllers\QuizController::class, 'update']);
+    Route::delete('/quizzes/{id}',                   [App\Http\Controllers\QuizController::class, 'destroy']);
+    Route::get('/quizzes/{id}/submissions',          [App\Http\Controllers\QuizController::class, 'submissions']);
+    Route::post('/quizzes/attempts/{attemptId}/grade', [App\Http\Controllers\QuizController::class, 'gradeAttempt']);
+
+    Route::post('/quizzes/{id}/start',               [App\Http\Controllers\QuizController::class, 'start']);
+    Route::post('/quizzes/attempts/{attemptId}/submit', [App\Http\Controllers\QuizController::class, 'submit']);
+    Route::get('/quizzes/attempts/{attemptId}/result',  [App\Http\Controllers\QuizController::class, 'result']);
+
+    // Teacher routes
+    Route::prefix('teacher')->group(function () {
+        Route::get('/stats',            [TeacherController::class, 'stats']);
+        Route::get('/roster',           [TeacherController::class, 'roster']);
+        Route::post('/nudge/{id}',      [TeacherController::class, 'sendNudge']);
+    });
+
     // Admin routes (require admin role)
     Route::prefix('admin')->middleware('admin')->group(function () {
-        Route::get('/stats',     [AdminController::class, 'stats']);
-        Route::get('/users',     [AdminController::class, 'listUsers']);
-        Route::get('/documents', [AdminController::class, 'listDocuments']);
+        Route::get('/stats',                       [AdminController::class, 'stats']);
+        Route::get('/users',                       [AdminController::class, 'listUsers']);
+        Route::patch('/users/{id}/approve-teacher', [AdminController::class, 'toggleTeacherApproval']);
+        Route::patch('/users/{id}/assign-teacher',  [AdminController::class, 'assignTeacher']);
+        Route::get('/documents',                   [AdminController::class, 'listDocuments']);
     });
 });

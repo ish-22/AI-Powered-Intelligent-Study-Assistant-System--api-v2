@@ -11,19 +11,29 @@ class ProfileController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
+        $teacher = $user->assignedTeacher;
         return response()->json([
             'user' => [
-                'id'              => $user->id,
-                'full_name'       => $user->full_name,
-                'email'           => $user->email,
-                'role'            => $user->role ?? 'student',
-                'profile_picture' => $user->profile_picture,
-                'about_me'        => $user->about_me,
-                'primary_course'  => $user->primary_course,
-                'language'        => $user->language,
-                'preferences'     => $user->preferences ?: [],
-                'created_at'      => $user->created_at,
-                'last_login_date' => $user->last_login_date,
+                'id'                  => $user->id,
+                'full_name'           => $user->full_name,
+                'email'               => $user->email,
+                'role'                => $user->role ?? 'student',
+                'profile_picture'     => $user->profile_picture,
+                'about_me'            => $user->about_me,
+                'primary_course'      => $user->primary_course,
+                'language'            => $user->language,
+                'preferences'         => $user->preferences ?: [],
+                'created_at'          => $user->created_at,
+                'last_login_date'     => $user->last_login_date,
+                'assigned_teacher_id' => $user->assigned_teacher_id,
+                'assigned_teacher'    => $teacher ? [
+                    'id'              => $teacher->id,
+                    'full_name'       => $teacher->full_name,
+                    'email'           => $teacher->email,
+                    'primary_course'  => $teacher->primary_course,
+                    'about_me'        => $teacher->about_me,
+                    'profile_picture' => $teacher->profile_picture,
+                ] : null,
             ],
         ]);
     }

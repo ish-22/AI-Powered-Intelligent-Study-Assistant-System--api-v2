@@ -33,11 +33,24 @@ class User extends Authenticatable
         'google_id',
         'last_login_date',
         'role',
+        'is_approved',
+        'assigned_teacher_id',
+        'email_verified_at',
         'about_me',
         'primary_course',
         'language',
         'preferences',
     ];
+
+    public function assignedTeacher()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'assigned_teacher_id');
+    }
+
+    public function assignedStudents()
+    {
+        return $this->hasMany(\App\Models\User::class, 'assigned_teacher_id');
+    }
 
     public function documents()
     {

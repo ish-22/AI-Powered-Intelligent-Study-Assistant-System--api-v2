@@ -11,12 +11,39 @@ class DocumentController extends Controller
 {
     public function index(Request $request)
     {
-        $docs = Document::where('user_id', $request->user()->id)
+        $user = $request->user();
+
+        if ($user->role === 'teacher') {
+            // Teacher sees documents uploaded by themselves
+            $docs = Document::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($d) => $this->format($d));
+
+            return response()->json([
+                'documents' => $docs,
+                'class_materials' => $docs,
+            ]);
+        }
+
+        // Student query: separate personal docs from assigned teacher class materials
+        $ownDocs = Document::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($d) => $this->format($d));
 
-        return response()->json(['documents' => $docs]);
+        $teacherMaterials = [];
+        if ($user->assigned_teacher_id) {
+            $teacherMaterials = Document::where('user_id', $user->assigned_teacher_id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($d) => $this->format($d));
+        }
+
+        return response()->json([
+            'documents'       => $ownDocs,
+            'class_materials' => $teacherMaterials,
+        ]);
     }
 
     public function store(Request $request)

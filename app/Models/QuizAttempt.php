@@ -25,12 +25,18 @@ class QuizAttempt extends Model
     protected $fillable = [
         'quiz_id',
         'user_id',
+        'status',
         'score_percentage',
+        'total_marks_obtained',
+        'grade',
+        'teacher_feedback',
         'time_spent_seconds',
+        'started_at',
         'completed_at',
     ];
 
     protected $casts = [
+        'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 
