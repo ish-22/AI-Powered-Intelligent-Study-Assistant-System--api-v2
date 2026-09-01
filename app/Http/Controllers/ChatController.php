@@ -15,6 +15,9 @@ class ChatController extends Controller
     public function index(Request $request)
     {
         $chats = Chat::where('user_id', $request->user()->id)
+            ->withCount(['messages' => function ($query) {
+                $query->where('role', '!=', 'system');
+            }])
             ->orderBy('updated_at', 'desc')
             ->get(['id', 'title', 'updated_at']);
 
