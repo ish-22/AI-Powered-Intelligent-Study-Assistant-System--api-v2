@@ -30,8 +30,14 @@ class ChatController extends Controller
         $context = null;
 
         if ($request->filled('document_id')) {
-            $doc = Document::where('id', $request->document_id)
-                ->where('user_id', $request->user()->id)
+            $user = $request->user();
+            $doc  = Document::where('id', $request->document_id)
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                    if ($user->assigned_teacher_id) {
+                        $q->orWhere('user_id', $user->assigned_teacher_id);
+                    }
+                })
                 ->first();
 
             if ($doc) {
@@ -71,7 +77,11 @@ class ChatController extends Controller
     {
         $chat = Chat::where('id', $id)
             ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['message' => 'Chat session not found or has been deleted.'], 404);
+        }
 
         $messages = $chat->messages()->where('role', '!=', 'system')->get();
 
@@ -85,7 +95,11 @@ class ChatController extends Controller
 
         $chat = Chat::where('id', $id)
             ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['message' => 'Chat session not found or has been deleted.'], 404);
+        }
 
         // Build history — include system messages (document context) but cap total at 20
         $history = $chat->messages()
@@ -138,10 +152,15 @@ class ChatController extends Controller
     // DELETE /chats/{id}
     public function destroy(Request $request, string $id)
     {
-        Chat::where('id', $id)
+        $chat = Chat::where('id', $id)
             ->where('user_id', $request->user()->id)
-            ->firstOrFail()
-            ->delete();
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['message' => 'Chat session not found or has been deleted.'], 404);
+        }
+
+        $chat->delete();
 
         return response()->json(['message' => 'Chat deleted']);
     }

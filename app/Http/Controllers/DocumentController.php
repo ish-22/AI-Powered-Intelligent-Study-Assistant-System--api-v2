@@ -159,17 +159,30 @@ class DocumentController extends Controller
         // Scale max_tokens: ~150 tokens per question + overhead
         $maxTokens = min(4000, 300 + ($count * 150));
 
-        $difficultyPrompt = "The questions should be at a {$difficulty} difficulty level.";
-        $topicPrompt = $topic ? "Focus heavily on the specific topic: '{$topic}'." : "";
+        $difficultyPrompt = match ($difficulty) {
+            'hard' => "The assessment MUST be at an Advanced Honors/Competitive Exam difficulty level. Questions must require multi-step reasoning, critical analysis, scenario evaluation, and subtle domain nuances.",
+            'easy' => "The assessment should be at a Foundational Exam level, testing core definitions, key mechanisms, and fundamental principles accurately.",
+            default => "The assessment MUST be at a Standard University/Board Exam difficulty level, emphasizing application of concepts, comparative analysis, and practical scenario resolution."
+        };
+        $topicPrompt = $topic ? "Focus specifically on the topic: '{$topic}'." : "";
 
         $rawJson = $this->callAI([
             [
                 'role'    => 'system',
-                'content' => "You are an expert quiz generator. Generate exactly {$count} multiple-choice questions from the given document. {$difficultyPrompt} {$topicPrompt} IMPORTANT: The correct answer must be placed randomly among the options — do NOT always put it as option A. Vary which option (A, B, C, or D) is correct across questions. Respond ONLY with a valid JSON array, no other text: [{\"question\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"answer\": \"B) ...\", \"explanation\": \"...\"}]",
+                'content' => "You are a Senior Academic Examiner and Standardized Assessment Specialist. Generate exactly {$count} rigorous, exam-style multiple-choice questions based on the provided material. {$difficultyPrompt} {$topicPrompt}
+
+CRITICAL RULES FOR EXAM QUALITY:
+1. QUESTION QUALITY: Craft questions in formal academic exam style (e.g., scenario-based, analytical problem solving, or deep conceptual evaluation). Avoid simple recall or superficial facts.
+2. PLAUSIBLE DISTRACTORS: All 4 options (A, B, C, D) must be plausible, realistic, and academically grounded—based on common student misconceptions or closely related technical terms. NEVER include obvious filler or trivial wrong answers.
+3. OPTION RANDOMIZATION: The correct answer MUST be randomly distributed across options (A, B, C, D). Do NOT always make option A correct.
+4. DETAILED EXPLANATION: Provide an in-depth explanation highlighting why the correct choice is accurate and why alternative options are incorrect.
+
+Format strictly as a valid JSON array with no extra text:
+[{\"question\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"answer\": \"C) ...\", \"explanation\": \"...\"}]",
             ],
             [
                 'role'    => 'user',
-                'content' => "Generate exactly {$count} multiple-choice quiz questions from this document titled \"{$doc->name}\" (subject: {$doc->subject}). Make sure correct answers are distributed across A, B, C, and D options — not always A:\n\n{$truncated}",
+                'content' => "Generate {$count} formal exam-type multiple-choice questions for the document titled \"{$doc->name}\" (Subject: {$doc->subject}):\n\n{$truncated}",
             ],
         ], $maxTokens);
 
@@ -207,14 +220,13 @@ class DocumentController extends Controller
     {
         if (!$doc->file_path) return null;
 
-        $absolutePath = Storage::disk('public')->path($doc->file_path);
-
-        if (!file_exists($absolutePath)) return null;
+        $disk = Storage::disk('public');
+        if (!$disk->exists($doc->file_path)) return null;
 
         $ext = strtolower($doc->file_type);
 
         if ($ext === 'txt') {
-            return file_get_contents($absolutePath);
+            return $disk->get($doc->file_path);
         }
 
         // For PDF/DOCX: return a fallback prompt with just filename+subject
@@ -273,28 +285,62 @@ class DocumentController extends Controller
 
     private function generateFallbackQuiz(Document $doc, int $count, string $difficulty, string $topic): array
     {
-        $subject = $doc->subject ?: 'General';
+        $subject = $doc->subject ?: 'Academic Studies';
         $title   = $doc->name;
         $focus   = $topic ?: $subject;
-        $difficultyLabel = $difficulty === 'hard' ? 'challenging' : ($difficulty === 'easy' ? 'beginner-friendly' : 'balanced');
+        $difficultyLabel = match ($difficulty) {
+            'hard' => 'Advanced Analytical Exam',
+            'easy' => 'Foundational Assessment',
+            default => 'Standard Board Exam',
+        };
 
-        $baseTopics = ['main idea', 'key concept', 'important detail', 'practical application', 'cause and effect'];
-        $questions  = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $topicLabel = $baseTopics[$i % count($baseTopics)];
-            $q = [
-                'question'    => "What is the most important {$topicLabel} covered in {$title}?",
-                'options'     => [
-                    'A) The central point of the material',
-                    'B) A minor example mentioned briefly',
-                    'C) An unrelated fact',
-                    'D) A formatting detail',
+        $scenarios = [
+            [
+                'question' => "In the context of {$subject} within \"{$title}\", which statement best evaluates the primary structural principles governing {$focus}?",
+                'options' => [
+                    "A) It establishes foundational parameters required for systematic validation.",
+                    "B) It serves as a secondary variable dependent on secondary environment factors.",
+                    "C) It provides an empirical framework strictly applicable to qualitative observation.",
+                    "D) It outlines theoretical limits without affecting operational execution."
                 ],
-                'answer'      => 'A) The central point of the material',
-                'explanation' => "This {$difficultyLabel} quiz question checks understanding of the core idea in {$title} for {$focus}.",
-            ];
-            $questions[] = $this->shuffleOptions($q);
+                'explanation' => "This question evaluates critical comprehension of structural principles in {$subject}. Option A correctly identifies the core parameter established in {$title}."
+            ],
+            [
+                'question' => "When analyzing key mechanisms associated with {$focus} in \"{$title}\", what is the most significant operational consequence of misinterpreting baseline assumptions?",
+                'options' => [
+                    "A) Decreased reliability and divergence from empirical expectations.",
+                    "B) Automatic resolution of structural anomalies during execution.",
+                    "C) Total independence between input variables and system outputs.",
+                    "D) Immediate stabilization of baseline performance metrics."
+                ],
+                'explanation' => "In {$subject}, misinterpreting foundational assumptions leads directly to reduced reliability and predictive divergence as examined in option A."
+            ],
+            [
+                'question' => "Which comparative analysis accurately distinguishes the primary methodologies described for {$focus} in \"{$title}\"?",
+                'options' => [
+                    "A) Method A prioritizes quantitative consistency, whereas Method B emphasizes contextual flexibility.",
+                    "B) Method A operates exclusively in non-standard environments, while Method B is theoretical.",
+                    "C) Both methodologies eliminate systemic trade-offs under all operational constraints.",
+                    "D) Methodologies in this domain cannot be subjected to comparative evaluation."
+                ],
+                'explanation' => "Formal analysis requires contrasting quantitative rigor against adaptive application, rendering Option A the correct comparative synthesis."
+            ],
+            [
+                'question' => "Suppose a complex scenario arises involving {$focus} in {$subject}. Based on the material in \"{$title}\", what is the optimal corrective action?",
+                'options' => [
+                    "A) Re-evaluate baseline parameters and apply targeted systemic adjustments.",
+                    "B) Ignore intermediate anomalies and maintain static operational constraints.",
+                    "C) Substitute foundational principles with unverified hypothetical models.",
+                    "D) Terminate evaluation without conducting root-cause diagnostic testing."
+                ],
+                'explanation' => "Standard exam methodology mandates systematic re-evaluation of parameters when confronting operational anomalies in {$focus}."
+            ]
+        ];
+
+        $questions = [];
+        for ($i = 0; $i < $count; $i++) {
+            $item = $scenarios[$i % count($scenarios)];
+            $questions[] = $this->shuffleOptions($item);
         }
 
         return $questions;

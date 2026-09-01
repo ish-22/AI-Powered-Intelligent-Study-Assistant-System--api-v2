@@ -100,21 +100,35 @@ class QuizController extends Controller
         }
         $truncated = mb_substr($combinedText, 0, 6000);
 
+        $difficultyInstructions = match ($difficulty) {
+            'hard' => 'Advanced Honors / Competitive Exam standard. Questions must test multi-step analysis, complex scenario resolution, critical evaluation, and subtle domain nuances.',
+            'easy' => 'Foundational Academic Exam standard. Questions must test key concepts, core principles, and exact terminology accurately.',
+            default => 'Standard University / Board Exam standard. Questions must emphasize application of knowledge, comparative analysis, and practical domain problem-solving.',
+        };
+
         $promptType = match($qType) {
-            'mcq'   => 'All questions must be Multiple Choice (type: mcq) with 4 options.',
-            'tf'    => 'All questions must be True/False (type: tf) with 2 options ["A) True", "B) False"].',
-            'short' => 'All questions must be Short Answer (type: short) with options null and a descriptive expected sample correct answer.',
+            'mcq'   => 'All questions must be Multiple Choice (type: mcq) with 4 plausible options (A, B, C, D). Randomize which option is correct.',
+            'tf'    => 'All questions must be True/False (type: tf) with 2 options ["A) True", "B) False"] testing subtle conceptual understanding.',
+            'short' => 'All questions must be Short Answer (type: short) with options null and a comprehensive, academic sample answer as correct_answer.',
             default => 'Include a mix of Multiple Choice (mcq), True/False (tf), and Short Answer (short) questions.',
         };
 
         $rawJson = $this->callAI([
             [
                 'role'    => 'system',
-                'content' => "You are an expert academic assessment creator. Generate exactly {$count} quiz questions based on the provided material at {$difficulty} difficulty level. {$promptType} Format JSON output strictly as: [{\"type\": \"mcq|tf|short\", \"question_text\": \"...\", \"options\": [\"A) ...\", \"B) ...\"], \"correct_answer\": \"...\", \"explanation\": \"...\", \"marks\": 10}]",
+                'content' => "You are a Senior Academic Examiner and University Assessment Specialist. Generate exactly {$count} rigorous, exam-style questions based on the provided material. {$difficultyInstructions} {$promptType}
+
+RULES FOR EXAM RIGOR:
+1. Craft questions in formal exam style (scenario-based, analytical problem solving, or deep conceptual evaluation). Avoid simple recall or surface-level trivialities.
+2. For MCQs, all 4 options MUST be plausible and academically realistic, based on common misconceptions or related technical concepts. NEVER use filler options.
+3. Ensure correct answers are randomly distributed across options (A, B, C, D).
+4. Provide detailed, rigorous explanations explaining the correct answer and why alternative choices are incorrect.
+
+Format JSON output strictly as a JSON array: [{\"type\": \"mcq|tf|short\", \"question_text\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"correct_answer\": \"...\", \"explanation\": \"...\", \"marks\": 10}]",
             ],
             [
                 'role'    => 'user',
-                'content' => "Generate {$count} {$difficulty} {$qType} questions from this material:\n\n{$truncated}",
+                'content' => "Generate {$count} formal exam-type {$difficulty} difficulty questions from this material:\n\n{$truncated}",
             ],
         ]);
 
@@ -655,16 +669,75 @@ class QuizController extends Controller
 
     private function generateFallbackQuestions(Document $doc, int $count, string $type): array
     {
+        $subject = $doc->subject ?: 'Academic Studies';
+        $title = $doc->name;
+
+        $examBank = [
+            [
+                'type'           => 'mcq',
+                'question_text'  => "Which statement best evaluates the fundamental theoretical model presented in {$title} regarding {$subject}?",
+                'options'        => [
+                    "A) It establishes structural parameters governing system interactions.",
+                    "B) It functions as a secondary observational metric under controlled environments.",
+                    "C) It replaces empirical verification with subjective estimation.",
+                    "D) It demonstrates zero correlation between independent and dependent variables."
+                ],
+                'correct_answer' => "A) It establishes structural parameters governing system interactions.",
+                'explanation'    => "Formal assessment verifies structural parameters as the primary model foundation established in the material.",
+                'marks'          => 10,
+            ],
+            [
+                'type'           => 'tf',
+                'question_text'  => "True or False: According to {$title}, baseline operational constraints in {$subject} can be ignored when evaluating long-term performance trends.",
+                'options'        => ["A) True", "B) False"],
+                'correct_answer' => "B) False",
+                'explanation'    => "False. Operational constraints are critical baseline parameters when measuring performance trends in {$subject}.",
+                'marks'          => 10,
+            ],
+            [
+                'type'           => 'short',
+                'question_text'  => "Analyze how primary mechanisms in {$subject} affect system outcomes as discussed in {$title}. Provide key points of comparison.",
+                'options'        => null,
+                'correct_answer' => "Primary mechanisms establish systemic boundaries, influencing response rates, output consistency, and operational predictability under varying conditions.",
+                'explanation'    => "Short answer evaluation rubric rewards clear comparative logic and accurate domain terminology.",
+                'marks'          => 10,
+            ],
+            [
+                'type'           => 'mcq',
+                'question_text'  => "What is the most critical diagnostic step when addressing systemic anomalies in {$subject} based on {$title}?",
+                'options'        => [
+                    "A) Conducting root-cause failure analysis against baseline metrics.",
+                    "B) Bypassing verification testing to accelerate deployment.",
+                    "C) Modifying historical data logs to match expected results.",
+                    "D) Assuming environmental factors account for all observed variances."
+                ],
+                'correct_answer' => "A) Conducting root-cause failure analysis against baseline metrics.",
+                'explanation'    => "Root-cause analysis against established baselines is standard diagnostic procedure in academic assessments.",
+                'marks'          => 10,
+            ]
+        ];
+
         $list = [];
         for ($i = 0; $i < $count; $i++) {
-            $list[] = [
-                'type'           => $type === 'mixed' ? ($i % 2 === 0 ? 'mcq' : 'short') : $type,
-                'question_text'  => "Sample question #" . ($i + 1) . " on " . ($doc->subject ?: 'course material'),
-                'options'        => ["A) Core concept", "B) Secondary theory", "C) Irrelevant detail", "D) Null hypothesis"],
-                'correct_answer' => "A) Core concept",
-                'explanation'    => "Validates key domain knowledge.",
-                'marks'          => 10,
-            ];
+            $item = $examBank[$i % count($examBank)];
+            if ($type !== 'mixed') {
+                $item['type'] = $type;
+                if ($type === 'tf') {
+                    $item['options'] = ["A) True", "B) False"];
+                    $item['correct_answer'] = $i % 2 === 0 ? "A) True" : "B) False";
+                } elseif ($type === 'short') {
+                    $item['options'] = null;
+                } elseif ($type === 'mcq' && empty($item['options'])) {
+                    $item['options'] = [
+                        "A) Standard parameter verification",
+                        "B) Secondary environmental variable",
+                        "C) Empirical deviation model",
+                        "D) Theoretical boundary constraint"
+                    ];
+                    $item['correct_answer'] = "A) Standard parameter verification";
+                }
+            }
+            $list[] = $item;
         }
         return $list;
     }
