@@ -98,8 +98,11 @@ class TeacherController extends Controller
         // Get list of distinct course categories available for filtering
         $categories = User::where('role', 'student')
             ->whereNotNull('primary_course')
+            ->distinct()
             ->pluck('primary_course')
-            ->concat(Document::pluck('subject'))
+            ->concat(
+                Document::select('subject')->whereNotNull('subject')->distinct()->pluck('subject')
+            )
             ->filter()
             ->unique()
             ->values()
