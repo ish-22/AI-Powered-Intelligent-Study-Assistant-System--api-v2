@@ -1,5 +1,5 @@
 {
-    "buildCommand": "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && npm ci && npm run build",
+    "buildCommand": "npm ci && npm run build",
     "framework": null,
     "functions": {
         "api/index.php": {
